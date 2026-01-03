@@ -16,24 +16,20 @@
 #endif
 
 struct GameAssets {
-    Texture2D sprite;
     Music music;
-    Sound sound;
     Shader postProcFragShader;
     Font font;
-    
-    Vector2 spriteSz;
 };
 
 struct GameState {
     unsigned int seed;
     double time;
     double gameStartTime;
-    Vector2 spritePos, spriteVel;
+
+    //
+    
     struct UserData {
         DO_NOT_SERIALIZE
-        int spriteColor = 0;
-        bool musEnabled = true;
         bool operator==(const UserData&) const = default;
     } usr;
     struct Temp {
