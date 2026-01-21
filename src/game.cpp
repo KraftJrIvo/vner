@@ -1,11 +1,26 @@
+#include <string>
+
 #include "game_basic.h"
 #include "raylib.h"
 #include "rlgl.h"
 
+#include "util/tinyjson.hpp"
 #include "util/vec_ops.h"
-#include <string>
+
+//tiny::TinyJson json;
+//json.ReadJson(readFile("res/strings.json"));
 
 #include "resources.h"
+#include "resource_tree.h"
+
+void dump_tree(int node, int depth) {
+    const ResourceNode* n = &g_resource_nodes[node];
+    // ... use n->name, n->path, n->is_dir, n->data, n->len ...
+    std::cout << "";
+    for (int child = n->first_child; child != -1; child = g_resource_nodes[child].next_sibling) {
+        dump_tree(child, depth + 1);
+    }
+}
 
 void _loadAssets(GameAssets& ga, GameState& gs) 
 {
@@ -18,12 +33,13 @@ void _loadAssets(GameAssets& ga, GameState& gs)
     int c; auto cdpts = LoadCodepoints((const char*)allChars, &c);
     ga.font = LoadFontFromMemory(".otf", res_font_otf, res_font_otf_len, 39, cdpts, c);
 
-    //ga.spriteSz = Vector2{100.0f, 100.0f};
+    dump_tree(g_resource_root_index, 0);
 }
 
 void _reset(GameState& gs) {
-    //gs.spritePos = Vector2{float(GetScreenWidth()), float(GetScreenHeight())} * 0.5f;
-    //gs.spriteVel = RAND_FLOAT_SIGNED_2D;
+    gs.spritePos = Vector2{GAME_WIDTH, GAME_HEIGHT} * 0.5f;
+    gs.spriteVel = RAND_FLOAT_SIGNED_2D;
+    gs.spriteSz = Vector2{100.0f, 100.0f};
 }
 
 void updateMusic(GameState& gs) {
@@ -37,10 +53,25 @@ void updateMusic(GameState& gs) {
 void _updateAndDraw(GameState& gs) {
     auto delta = GetFrameTime();
     if (delta < 0.1f) {
-        
+        gs.spritePos += gs.spriteVel * 100.f * GetFrameTime();
+        if (gs.spritePos.x - gs.spriteSz.x * 0.5f < 0 || gs.spritePos.x + gs.spriteSz.x * 0.5f > GAME_WIDTH) {
+            gs.spriteVel.x *= -1.0f;
+        }
+        if (gs.spritePos.y - gs.spriteSz.y * 0.5f < 0 || gs.spritePos.y + gs.spriteSz.y * 0.5f > GAME_HEIGHT) {
+            gs.spriteVel.y *= -1.0f;
+        }
     }
 
     updateMusic(gs);
     
     ClearBackground(BLACK);
+    DrawRectangleV(gs.spritePos - gs.spriteSz * 0.5f, gs.spriteSz, RED);
+}
+
+void _drawUI(GameState& gs) {
+    DrawRectangleLines(0, 0, GAME_WIDTH, GAME_HEIGHT, GREEN);
+    DrawCircleV({GAME_LEFT, GAME_HEIGHT * 0.5f}, 10, RED);
+    DrawCircleV({GAME_RIGHT, GAME_HEIGHT * 0.5f}, 10, GREEN);
+    DrawCircleV({GAME_WIDTH * 0.5f, GAME_BOTTOM}, 10, BLUE);
+    DrawCircleV({GAME_WIDTH * 0.5f, GAME_TOP}, 10, WHITE);
 }
