@@ -55,8 +55,10 @@ inline std::string prepShader(unsigned char* shaderBytes) {
 #endif
 }
 
-inline void setStuff(const GameAssets* ga, GameState& gs, RenderTexture* rt = NULL) {
-    gs.ga.p = ga;
+inline void setStuff(const GameAssets& ga, GameState& gs, RenderTexture* rt = NULL) {
+    if (!gs.ga.p) 
+        gs.ga.p = new GameAssets{};
+    *(GameAssets*)gs.ga.p = ga;
     loadUserData(gs);
     gs.tmp.renderTexNative = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
     gs.tmp.renderTexFinal = (rt && IsRenderTextureValid(*rt)) ? 
@@ -82,6 +84,7 @@ inline void renderPreUI(GameState& gs) {
 inline void renderPostUI(GameState& gs) {
     EndTextureMode();
     BeginDrawing();
+    ClearBackground(BLACK);
     if (IsRenderTextureValid(gs.tmp.renderTexFinal)) {
         float w = GAME_SCALE * gs.tmp.renderTexFinal.texture.width;
         float h = GAME_SCALE * gs.tmp.renderTexFinal.texture.height;
@@ -109,7 +112,7 @@ extern "C" {
         const GameAssets* ga = gs.ga.p;
         auto rt = gs.tmp.renderTexFinal;
         gs = ngs;
-        setStuff(ga, gs, &rt);
+        setStuff(*ga, gs, &rt);
     }
 
     void _reset(GameState& gs);
@@ -141,7 +144,7 @@ extern "C" {
         syncTime(gs);
 
         if (IsWindowResized())
-            setStuff(gs.ga.p, gs);
+            setStuff(*gs.ga.p, gs);
 
         BeginTextureMode(gs.tmp.renderTexNative);
         _updateAndDraw(gs);
